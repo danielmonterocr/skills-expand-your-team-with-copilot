@@ -553,6 +553,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </ul>
       </div>
       <div class="activity-card-actions">
+        <button class="share-button" data-activity="${name}">📤 Share</button>
         ${
           currentUser
             ? `
@@ -587,7 +588,42 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    // Add click handler for share button
+    const shareButton = activityCard.querySelector(".share-button");
+    shareButton.addEventListener("click", () => {
+      shareActivity(name, details, shareButton);
+    });
+
     activitiesList.appendChild(activityCard);
+  }
+
+  // Share an activity using the Web Share API or clipboard fallback
+  function shareActivity(name, details, buttonElement) {
+    const formattedSchedule = formatSchedule(details);
+    const shareTitle = `Join ${name} at Mergington High School!`;
+    const shareText = `${details.description}\nSchedule: ${formattedSchedule}`;
+    const shareUrl = window.location.href;
+
+    if (navigator.share) {
+      navigator.share({
+        title: shareTitle,
+        text: shareText,
+        url: shareUrl,
+      }).catch(() => {});
+    } else {
+      const textToCopy = `${shareTitle}\n${shareText}\n\nLearn more: ${shareUrl}`;
+      const originalContent = buttonElement.innerHTML;
+
+      navigator.clipboard.writeText(textToCopy)
+        .then(() => {
+          buttonElement.innerHTML = "✓ Copied!";
+          setTimeout(() => { buttonElement.innerHTML = originalContent; }, 2000);
+        })
+        .catch(() => {
+          buttonElement.innerHTML = "⚠ Copy failed";
+          setTimeout(() => { buttonElement.innerHTML = originalContent; }, 2000);
+        });
+    }
   }
 
   // Event listeners for search and filter
